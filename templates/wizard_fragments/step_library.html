@@ -41,57 +41,79 @@
       </div>
     </div>
 
-    <!-- Plex-sourced lyrics treatment -->
+    <!-- Plex Pass -->
     <div class="form-group">
-      <div class="form-label" style="margin-bottom: 0.6rem;">Plex-Sourced Lyrics</div>
-      <div class="card" style="padding: 1rem 1.25rem; margin-bottom: 0;">
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.6;">
-          Plex Pass can fetch lyrics from providers like TIDAL and LyricFind. These are stored
-          inside Plex (not as <code>.lrc</code> files). You can treat them as already covered
-          so this tool skips re-fetching those tracks.
-        </p>
+      <div class="form-label" style="margin-bottom: 0.6rem;">Plex Pass</div>
+      <div class="mode-cards">
 
-        <label style="display:flex; align-items:flex-start; gap:0.75rem; cursor:pointer; margin-bottom:0.75rem;">
-          <input
-            type="checkbox"
-            name="treat_plex_synced_as_lrc"
-            value="true"
-            style="margin-top:0.2rem; accent-color: var(--accent);"
-            {% if not existing or existing.treat_plex_synced_as_lrc == 'true' %}checked{% endif %}
-          />
-          <div>
-            <div style="font-weight:600; font-size:0.88rem;">
-              Treat Plex timed lyrics as covered
-              <span class="badge badge-has_lrc" style="margin-left:0.4rem; vertical-align:middle;">Plex ♫ timed</span>
-            </div>
-            <div style="color:var(--text-muted); font-size:0.81rem; margin-top:0.2rem;">
-              Tracks where Plex has synced (timestamped) lyrics won't appear in your fetch queue.
-              They'll be marked as satisfied and shown with a Plex badge.
-            </div>
+        <label class="mode-card {% if not existing or existing.has_plex_pass != 'false' %}selected{% endif %}"
+               id="pass-card-yes" onclick="selectPlexPass('true')">
+          <input type="radio" name="has_plex_pass" value="true"
+            {% if not existing or existing.has_plex_pass != 'false' %}checked{% endif %} />
+          <div class="mode-card-header">
+            <span style="color: var(--accent);">●</span> I have Plex Pass
+          </div>
+          <div class="mode-card-desc">
+            Plex can fetch timed lyrics from providers like LyricFind and TIDAL.
+            LRC++ will check what Plex already has before deciding whether to fetch
+            from its own sources.
           </div>
         </label>
 
-        <label style="display:flex; align-items:flex-start; gap:0.75rem; cursor:pointer;">
-          <input
-            type="checkbox"
-            name="treat_plex_unsynced_as_lrc"
-            value="true"
-            style="margin-top:0.2rem; accent-color: var(--accent);"
-            {% if existing and existing.treat_plex_unsynced_as_lrc == 'true' %}checked{% endif %}
-          />
-          <div>
-            <div style="font-weight:600; font-size:0.88rem;">
-              Treat Plex plain-text lyrics as covered
-              <span class="badge badge-pending" style="margin-left:0.4rem; vertical-align:middle;">Plex ♫ text</span>
-            </div>
-            <div style="color:var(--text-muted); font-size:0.81rem; margin-top:0.2rem;">
-              Tracks where Plex only has un-timed lyrics won't be re-fetched either.
-              <span style="color:var(--warning);">Not recommended</span> — un-timed lyrics don't scroll with the music.
-            </div>
+        <label class="mode-card {% if existing and existing.has_plex_pass == 'false' %}selected{% endif %}"
+               id="pass-card-no" onclick="selectPlexPass('false')">
+          <input type="radio" name="has_plex_pass" value="false"
+            {% if existing and existing.has_plex_pass == 'false' %}checked{% endif %} />
+          <div class="mode-card-header">
+            <span style="color: var(--info);">●</span> I don't have Plex Pass
+          </div>
+          <div class="mode-card-desc">
+            Plex won't fetch lyrics automatically. LRC++ will be your primary lyrics
+            source — it'll fetch and write a <code>.lrc</code> file for every track
+            it can find a match for.
           </div>
         </label>
+
       </div>
-      <div class="form-hint">These can be changed at any time in Settings.</div>
+    </div>
+
+    <!-- Lyric source preference (only relevant for Plex Pass users) -->
+    <div class="form-group" id="pref-group" {% if existing and existing.has_plex_pass == 'false' %}style="display:none;"{% endif %}>
+      <div class="form-label" style="margin-bottom: 0.6rem;">Lyrics Source Preference</div>
+      <div class="mode-cards">
+
+        <label class="mode-card {% if not existing or existing.lyric_source_preference != 'prefer_lrcplusplus' %}selected{% endif %}"
+               id="pref-card-plex" onclick="selectPref('prefer_plex')">
+          <input type="radio" name="lyric_source_preference" value="prefer_plex"
+            {% if not existing or existing.lyric_source_preference != 'prefer_lrcplusplus' %}checked{% endif %} />
+          <div class="mode-card-header">
+            <span style="color: var(--accent);">●</span> Prefer Plex
+            <span style="font-weight:400; color:var(--text-muted); font-size:0.8rem;">(Recommended)</span>
+          </div>
+          <div class="mode-card-desc">
+            If Plex already has timed lyrics for a track, treat it as covered — no
+            <code>.lrc</code> needed. LRC++ only fetches for tracks Plex has nothing
+            on, or where Plex only has plain-text lyrics (likely upgradeable to synced).
+          </div>
+        </label>
+
+        <label class="mode-card {% if existing and existing.lyric_source_preference == 'prefer_lrcplusplus' %}selected{% endif %}"
+               id="pref-card-lrcpp" onclick="selectPref('prefer_lrcplusplus')">
+          <input type="radio" name="lyric_source_preference" value="prefer_lrcplusplus"
+            {% if existing and existing.lyric_source_preference == 'prefer_lrcplusplus' %}checked{% endif %} />
+          <div class="mode-card-header">
+            <span style="color: var(--info);">●</span> Prefer LRC++
+          </div>
+          <div class="mode-card-desc">
+            LRC++ always fetches and writes a local <code>.lrc</code> file. Since Plex
+            gives priority to local files, this makes LRC++ your primary lyrics source.
+            Fine-tune edge cases (e.g. when LRC++ only finds plain text but Plex has
+            timed) during onboarding.
+          </div>
+        </label>
+
+      </div>
+      <div class="form-hint">Edge-case sub-settings are available during onboarding and in Settings.</div>
     </div>
   </form>
 
@@ -110,6 +132,14 @@
       hx-target="#wizard-body"
       hx-swap="innerHTML"
       hx-include="#library-form"
+      hx-on::before-request="
+        sessionStorage.setItem('plex_library', document.getElementById('library-select').value);
+        sessionStorage.setItem('music_dir', document.getElementById('music_dir').value);
+        const passInput = document.querySelector('input[name=has_plex_pass]:checked');
+        if (passInput) sessionStorage.setItem('has_plex_pass', passInput.value);
+        const prefInput = document.querySelector('input[name=lyric_source_preference]:checked');
+        if (prefInput) sessionStorage.setItem('lyric_source_preference', prefInput.value);
+      "
     >
       Next →
     </button>
@@ -117,6 +147,22 @@
 </div>
 
 <script>
+  function selectPlexPass(val) {
+    document.querySelectorAll('#pass-card-yes, #pass-card-no').forEach(c => c.classList.remove('selected'));
+    const cardId = val === 'true' ? 'pass-card-yes' : 'pass-card-no';
+    document.getElementById(cardId).classList.add('selected');
+    document.getElementById(cardId).querySelector('input[type=radio]').checked = true;
+    // Show/hide preference group — only relevant for Plex Pass users
+    document.getElementById('pref-group').style.display = val === 'true' ? '' : 'none';
+  }
+
+  function selectPref(pref) {
+    document.querySelectorAll('#pref-card-plex, #pref-card-lrcpp').forEach(c => c.classList.remove('selected'));
+    const cardId = pref === 'prefer_plex' ? 'pref-card-plex' : 'pref-card-lrcpp';
+    document.getElementById(cardId).classList.add('selected');
+    document.getElementById(cardId).querySelector('input[type=radio]').checked = true;
+  }
+
   // Restore connection values from sessionStorage
   document.addEventListener('htmx:load', () => {
     const urlEl = document.getElementById('plex_url_h');

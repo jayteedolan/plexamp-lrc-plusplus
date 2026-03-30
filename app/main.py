@@ -27,8 +27,10 @@ def _seed_default_config() -> None:
             "operating_mode": "normal",
             "dangerous_threshold": "high",
             "setup_complete": "false",
-            "treat_plex_synced_as_lrc": "true",
-            "treat_plex_unsynced_as_lrc": "false",
+            "has_plex_pass": "true",
+            "lyric_source_preference": "prefer_plex",
+            "timed_override": "false",
+            "accept_plex_timed_if_plain": "false",
         }
         for key, value in defaults.items():
             from app.models import Config

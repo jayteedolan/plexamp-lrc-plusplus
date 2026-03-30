@@ -10,6 +10,8 @@
     <input type="hidden" name="music_dir" id="music_dir_h" />
     <input type="hidden" name="operating_mode" id="mode_h" />
     <input type="hidden" name="dangerous_threshold" id="threshold_h" />
+    <input type="hidden" name="has_plex_pass" id="pass_h" />
+    <input type="hidden" name="lyric_source_preference" id="pref_h" />
 
     <div class="card">
       <div style="display: flex; flex-direction: column; gap: 0.75rem;">
@@ -29,9 +31,13 @@
           <span style="color: var(--text-muted); font-size: 0.85rem;">Music Directory</span>
           <span id="confirm-dir" style="font-family: var(--font-mono); font-size: 0.85rem;"></span>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.6rem; border-bottom: 1px solid var(--border);">
           <span style="color: var(--text-muted); font-size: 0.85rem;">Operating Mode</span>
           <span id="confirm-mode" style="font-size: 0.85rem; font-weight: 600;"></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--text-muted); font-size: 0.85rem;">Lyrics Preference</span>
+          <span id="confirm-pref" style="font-size: 0.85rem;"></span>
         </div>
       </div>
     </div>
@@ -81,6 +87,20 @@
     modeEl.textContent = modeLabels[mode] || mode;
     modeEl.style.color = modeColors[mode] || '';
 
+    const hasPass = get('has_plex_pass') !== 'false';
+    document.getElementById('pass_h').value = hasPass ? 'true' : 'false';
+
+    const pref = get('lyric_source_preference') || 'prefer_plex';
+    document.getElementById('pref_h').value = pref;
+    const prefEl = document.getElementById('confirm-pref');
+    if (!hasPass) {
+      prefEl.textContent = 'LRC++ (no Plex Pass)';
+      prefEl.style.color = 'var(--info)';
+    } else {
+      prefEl.textContent = pref === 'prefer_plex' ? 'Prefer Plex' : 'Prefer LRC++';
+      prefEl.style.color = pref === 'prefer_plex' ? 'var(--accent)' : 'var(--info)';
+    }
+
     // Populate hidden form fields
     document.getElementById('plex_url_h').value = url;
     document.getElementById('plex_token_h').value = get('plex_token');
@@ -88,5 +108,6 @@
     document.getElementById('music_dir_h').value = dir;
     document.getElementById('mode_h').value = mode;
     document.getElementById('threshold_h').value = threshold;
+    document.getElementById('pref_h').value = get('lyric_source_preference') || 'prefer_plex';
   });
 </script>
