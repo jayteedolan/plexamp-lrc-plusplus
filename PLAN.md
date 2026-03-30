@@ -8,6 +8,47 @@ This repo also serves as **living documentation** — the plan, architecture dec
 
 ---
 
+## Operating Modes
+
+Three modes control how lyrics are fetched and approved. Set during first-run wizard, changeable in Settings.
+
+| Mode | Behavior |
+|------|----------|
+| **Normal** (default) | Auto-approve HIGH confidence matches. MEDIUM → review queue. LOW → error/flagged. |
+| **Debug** | Capture raw API responses + confidence trace for every source tried. All tracks queued for manual review. Free-browse review queue with expandable debug panels. |
+| **Dangerously Accept** | Bulk auto-approve at a user-set confidence threshold (HIGH / MEDIUM+ / ALL). After each run: summary report with counts by confidence level + "Undo This Batch" bulk rollback. ⚠️ Wrong lyrics will be written. Not recommended. |
+
+### ModeConfig (`app/mode_config.py`)
+
+Flag-based approach — no strategy pattern. A `ModeConfig` dataclass centralizes all per-mode settings:
+
+```python
+@dataclass
+class ModeConfig:
+    mode: OperatingMode         # "normal" | "debug" | "dangerous"
+    dangerous_threshold: str    # "high" | "medium" | "low"
+
+    def should_auto_approve(self, confidence: str) -> bool: ...
+    @property
+    def capture_trace(self) -> bool: ...  # True only in debug mode
+```
+
+`get_mode_config(db)` loads from the `config` table. Used by `scanner.py`, `worker.py`.
+
+### Debug Trace
+
+When `capture_trace=True`, `LyricsResult` carries a `debug_trace` dict with:
+- Per-source: request params, response summary, decision (accepted/rejected + reason)
+- Confidence breakdown: `title_similarity`, `artist_similarity`, `duration_delta_seconds`, `final_confidence`
+
+Stored in a nullable `debug_trace` JSON column on the `tracks` table.
+
+### Dangerously Accept Batch Undo
+
+Each dangerous-accept run generates a UUID `batch_id`. All auto-approved tracks in that run get `batch_id` stamped on them. The undo endpoint (`POST /onboarding/batch/{id}/undo`) deletes their `.lrc` files, resets `lyrics_status → pending`, and triggers a Plex section refresh.
+
+---
+
 ## Lyrics Source Strategy
 
 | Source | Synced? | Auth? | Notes |
@@ -58,21 +99,26 @@ plexamp-lrc-plusplus/
 │   ├── config.py               ← pydantic-settings, two-tier config (env + DB)
 │   ├── database.py             ← SQLAlchemy engine, session factory, Base
 │   ├── models.py               ← ORM models: Track, Album, ActivityLog, Config
+│   ├── mode_config.py          ← ModeConfig dataclass + OperatingMode enum
 │   ├── plex_client.py          ← plexapi wrapper (connect, enumerate tracks, refresh)
-│   ├── lyrics_fetcher.py       ← LRCLIB → syncedlyrics → Genius fallback chain
+│   ├── lyrics_fetcher.py       ← LRCLIB → syncedlyrics → Genius fallback chain + debug_trace
 │   ├── scanner.py              ← sync Plex library → DB, write LRC files to disk
 │   ├── worker.py               ← APScheduler jobs wired to scanner/fetcher
 │   ├── routers/
 │   │   ├── __init__.py
+│   │   ├── wizard.py           ← GET/POST /setup  (first-run + re-runnable setup wizard)
 │   │   ├── dashboard.py        ← GET /  (stats, recent log)
-│   │   ├── onboarding.py       ← GET/POST /onboarding  (album-by-album flow)
+│   │   ├── onboarding.py       ← GET/POST /onboarding  (album-by-album flow, mode-aware)
 │   │   ├── library.py          ← GET /library  (browse all tracks/albums)
 │   │   ├── logs.py             ← GET /logs  (activity log viewer)
-│   │   └── settings.py         ← GET/POST /settings  (Plex config, intervals)
+│   │   └── settings.py         ← GET/POST /settings  (Plex config, intervals, mode)
 │   └── templates/
 │       ├── base.html           ← nav, HTMX script tag, global styles link
+│       ├── wizard.html         ← multi-step setup wizard (HTMX-driven)
 │       ├── dashboard.html
-│       ├── onboarding.html
+│       ├── onboarding.html     ← mode-aware album grid
+│       ├── onboarding_album.html ← track review + debug panel
+│       ├── batch_report.html   ← dangerously-accept run summary + undo
 │       ├── library.html
 │       ├── logs.html
 │       └── settings.html
@@ -107,6 +153,8 @@ plexamp-lrc-plusplus/
 | last_checked_at | DateTime | Last fetch attempt |
 | lrc_written_at | DateTime | When .lrc was written to disk |
 | plex_refreshed_at | DateTime | When Plex was triggered to refresh |
+| debug_trace | Text (JSON) | Nullable — raw API responses + confidence breakdown, debug mode only |
+| batch_id | String | Nullable UUID — groups tracks auto-approved in one dangerous-accept run |
 | created_at | DateTime | |
 | updated_at | DateTime | Auto-update trigger |
 
@@ -144,8 +192,14 @@ plexamp-lrc-plusplus/
 ## Key API Endpoints
 
 ```
+GET  /setup                     First-run setup wizard (redirects to / if already configured)
+GET  /setup/rerun               Re-run wizard (always accessible, pre-populates existing config)
+POST /setup/test-plex           Test Plex connection, return HTMX fragment
+GET  /setup/libraries           Return library dropdown (HTMX, after connection test)
+POST /setup/save                Save config, trigger initial scan, redirect to /onboarding
+
 GET  /                          Dashboard (stats, recent log)
-GET  /onboarding                Onboarding home (album list with progress)
+GET  /onboarding                Onboarding home (album list with progress; mode-aware)
 GET  /onboarding/{album_id}     Album detail - show tracks with proposed lyrics
 POST /onboarding/{album_id}/approve  Approve all or individual tracks
 POST /onboarding/{album_id}/reject   Reject track(s)
@@ -165,6 +219,10 @@ POST /settings/test-plex        Test Plex connection, return result inline (HTMX
 
 POST /api/scan                  Trigger manual library scan
 POST /api/fetch-pending         Trigger immediate fetch run for all pending tracks
+
+POST /onboarding/bulk-approve           Dangerous mode: run bulk auto-approve (generates batch_id)
+GET  /onboarding/batch-report/{id}      Show summary report for a completed batch
+POST /onboarding/batch/{id}/undo        Delete .lrc files, reset tracks to pending
 ```
 
 ---
