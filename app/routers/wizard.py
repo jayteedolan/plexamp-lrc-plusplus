@@ -114,6 +114,8 @@ async def wizard_step(step_num: int, request: Request, db: Session = Depends(get
         "music_dir": get_config_value(db, "music_dir"),
         "operating_mode": get_config_value(db, "operating_mode", "normal"),
         "dangerous_threshold": get_config_value(db, "dangerous_threshold", "high"),
+        "treat_plex_synced_as_lrc": get_config_value(db, "treat_plex_synced_as_lrc", "true"),
+        "treat_plex_unsynced_as_lrc": get_config_value(db, "treat_plex_unsynced_as_lrc", "false"),
     }
     return templates.TemplateResponse(
         templates_map[step_num],
@@ -133,6 +135,8 @@ async def wizard_save(
     music_dir: str = Form(""),
     operating_mode: str = Form("normal"),
     dangerous_threshold: str = Form("high"),
+    treat_plex_synced_as_lrc: str = Form("false"),
+    treat_plex_unsynced_as_lrc: str = Form("false"),
 ):
     set_config_value(db, "plex_url", plex_url.strip())
     set_config_value(db, "plex_token", plex_token.strip())
@@ -140,6 +144,9 @@ async def wizard_save(
     set_config_value(db, "music_dir", music_dir.strip())
     set_config_value(db, "operating_mode", operating_mode)
     set_config_value(db, "dangerous_threshold", dangerous_threshold)
+    # Checkboxes only send a value when checked; treat absence as "false"
+    set_config_value(db, "treat_plex_synced_as_lrc", "true" if treat_plex_synced_as_lrc == "true" else "false")
+    set_config_value(db, "treat_plex_unsynced_as_lrc", "true" if treat_plex_unsynced_as_lrc == "true" else "false")
     set_config_value(db, "setup_complete", "true")
 
     # Trigger initial library scan (worker will be wired up in a later slice)

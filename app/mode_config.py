@@ -74,3 +74,24 @@ def get_mode_config(db: Session) -> ModeConfig:
     except ValueError:
         threshold = ConfidenceThreshold.HIGH
     return ModeConfig(mode=mode, dangerous_threshold=threshold)
+
+
+def get_plex_lyrics_settings(db: Session) -> dict:
+    """Return the two Plex-sourced lyrics treatment toggles."""
+    return {
+        "treat_plex_synced_as_lrc": get_config_value(db, "treat_plex_synced_as_lrc", "true") == "true",
+        "treat_plex_unsynced_as_lrc": get_config_value(db, "treat_plex_unsynced_as_lrc", "false") == "true",
+    }
+
+
+def track_needs_fetch(plex_lyrics_state: str, plex_settings: dict) -> bool:
+    """Return True if this track still needs lyrics fetched from an external source.
+
+    A track does NOT need fetching if Plex already has lyrics for it AND the
+    corresponding toggle is enabled (treating those lyrics as sufficient).
+    """
+    if plex_lyrics_state == "synced" and plex_settings["treat_plex_synced_as_lrc"]:
+        return False
+    if plex_lyrics_state == "unsynced" and plex_settings["treat_plex_unsynced_as_lrc"]:
+        return False
+    return True

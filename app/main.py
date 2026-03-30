@@ -27,6 +27,8 @@ def _seed_default_config() -> None:
             "operating_mode": "normal",
             "dangerous_threshold": "high",
             "setup_complete": "false",
+            "treat_plex_synced_as_lrc": "true",
+            "treat_plex_unsynced_as_lrc": "false",
         }
         for key, value in defaults.items():
             from app.models import Config

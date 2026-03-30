@@ -40,6 +40,59 @@
         <code>/mnt/media/Music</code>.
       </div>
     </div>
+
+    <!-- Plex-sourced lyrics treatment -->
+    <div class="form-group">
+      <div class="form-label" style="margin-bottom: 0.6rem;">Plex-Sourced Lyrics</div>
+      <div class="card" style="padding: 1rem 1.25rem; margin-bottom: 0;">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.6;">
+          Plex Pass can fetch lyrics from providers like TIDAL and LyricFind. These are stored
+          inside Plex (not as <code>.lrc</code> files). You can treat them as already covered
+          so this tool skips re-fetching those tracks.
+        </p>
+
+        <label style="display:flex; align-items:flex-start; gap:0.75rem; cursor:pointer; margin-bottom:0.75rem;">
+          <input
+            type="checkbox"
+            name="treat_plex_synced_as_lrc"
+            value="true"
+            style="margin-top:0.2rem; accent-color: var(--accent);"
+            {% if not existing or existing.treat_plex_synced_as_lrc == 'true' %}checked{% endif %}
+          />
+          <div>
+            <div style="font-weight:600; font-size:0.88rem;">
+              Treat Plex timed lyrics as covered
+              <span class="badge badge-has_lrc" style="margin-left:0.4rem; vertical-align:middle;">Plex ♫ timed</span>
+            </div>
+            <div style="color:var(--text-muted); font-size:0.81rem; margin-top:0.2rem;">
+              Tracks where Plex has synced (timestamped) lyrics won't appear in your fetch queue.
+              They'll be marked as satisfied and shown with a Plex badge.
+            </div>
+          </div>
+        </label>
+
+        <label style="display:flex; align-items:flex-start; gap:0.75rem; cursor:pointer;">
+          <input
+            type="checkbox"
+            name="treat_plex_unsynced_as_lrc"
+            value="true"
+            style="margin-top:0.2rem; accent-color: var(--accent);"
+            {% if existing and existing.treat_plex_unsynced_as_lrc == 'true' %}checked{% endif %}
+          />
+          <div>
+            <div style="font-weight:600; font-size:0.88rem;">
+              Treat Plex plain-text lyrics as covered
+              <span class="badge badge-pending" style="margin-left:0.4rem; vertical-align:middle;">Plex ♫ text</span>
+            </div>
+            <div style="color:var(--text-muted); font-size:0.81rem; margin-top:0.2rem;">
+              Tracks where Plex only has un-timed lyrics won't be re-fetched either.
+              <span style="color:var(--warning);">Not recommended</span> — un-timed lyrics don't scroll with the music.
+            </div>
+          </div>
+        </label>
+      </div>
+      <div class="form-hint">These can be changed at any time in Settings.</div>
+    </div>
   </form>
 
   <div class="wizard-actions">

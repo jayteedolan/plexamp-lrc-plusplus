@@ -35,6 +35,10 @@ class Track(Base):
     # unreviewed / approved / rejected / skipped
     onboarding_status: Mapped[str] = mapped_column(String, default="unreviewed")
 
+    # Plex-sourced lyrics detected during library scan
+    # none / synced / unsynced
+    plex_lyrics_state: Mapped[str] = mapped_column(String, default="none")
+
     # Debug mode: raw API responses + confidence breakdown (JSON)
     debug_trace: Mapped[str | None] = mapped_column(Text, nullable=True)
 

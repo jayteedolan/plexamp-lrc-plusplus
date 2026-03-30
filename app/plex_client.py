@@ -68,7 +68,26 @@ def get_tracks(url: str, token: str, library_name: str) -> Iterator[dict]:
             "duration_ms": track.duration or None,
             "file_path": file_path,
             "year": getattr(track, "year", None),
+            "plex_lyrics_state": _detect_plex_lyrics_state(track),
         }
+
+
+def _detect_plex_lyrics_state(track) -> str:
+    """Return 'synced', 'unsynced', or 'none' based on Plex's own lyric streams.
+
+    Plex Pass / TIDAL / LyricFind lyrics appear as LyricStream objects on the
+    track's media parts. We check the `timed` attribute to distinguish synced
+    (timestamped) lyrics from plain-text lyrics.
+    """
+    try:
+        streams = track.lyricStreams()
+        if not streams:
+            return "none"
+        if any(getattr(s, "timed", False) for s in streams):
+            return "synced"
+        return "unsynced"
+    except Exception:  # noqa: BLE001
+        return "none"
 
 
 def refresh_section(url: str, token: str, section_id: int) -> None:

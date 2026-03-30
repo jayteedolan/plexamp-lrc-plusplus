@@ -269,6 +269,10 @@ select.form-control { cursor: pointer; }
 .badge-medium { background: rgba(245, 166, 35, 0.15); color: var(--warning); }
 .badge-low    { background: rgba(224, 92, 92, 0.15);  color: var(--danger); }
 
+/* Plex-sourced lyrics badges */
+.badge-plex-synced   { background: rgba(229, 160, 13, 0.15); color: var(--accent); }
+.badge-plex-unsynced { background: rgba(122, 126, 153, 0.2);  color: var(--text-muted); }
+
 /* ---- Alerts / banners ---- */
 
 .alert {
