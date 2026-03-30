@@ -1,0 +1,109 @@
+<div class="wizard-body">
+  <div class="wizard-title">Plex Connection</div>
+  <div class="wizard-desc">Enter your Plex server's address and authentication token.</div>
+
+  <form id="connection-form">
+    <div class="form-group">
+      <label class="form-label" for="plex_url">Plex Server URL</label>
+      <input
+        class="form-control"
+        id="plex_url"
+        name="plex_url"
+        type="url"
+        placeholder="http://192.168.1.x:32400"
+        value="{{ existing.plex_url if existing else '' }}"
+        required
+      />
+      <div class="form-hint">Use your server's LAN IP address — not <code>localhost</code> (won't work inside Docker).</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="plex_token">Plex Token</label>
+      <input
+        class="form-control"
+        id="plex_token"
+        name="plex_token"
+        type="password"
+        placeholder="Your X-Plex-Token"
+        required
+      />
+      <details>
+        <summary>How do I find my Plex token?</summary>
+        <div>
+          <strong>Option 1 — Plex Web:</strong><br/>
+          Sign in at <code>plex.tv</code> → click your avatar → <em>Account</em>.<br/>
+          In the URL you'll see <code>X-Plex-Token=XXXXXX</code>.<br/><br/>
+
+          <strong>Option 2 — Plex support article:</strong><br/>
+          <code>support.plex.tv/articles/204059436</code><br/><br/>
+
+          <strong>Option 3 — Any Plex API request:</strong><br/>
+          Open your browser dev tools, go to Network, and look for
+          <code>X-Plex-Token</code> in any plex.tv or your server request headers.
+        </div>
+      </details>
+    </div>
+
+    <!-- Test connection result (HTMX swap target) -->
+    <div id="connection-result" style="min-height: 1.4rem; font-size: 0.9rem;"></div>
+    <!-- Hidden flag set by test-plex response when connection succeeds -->
+    <input type="hidden" id="connection-ok-flag" name="_connection_ok" value="" />
+  </form>
+
+  <div class="wizard-actions">
+    <button
+      class="btn btn-ghost"
+      hx-get="/setup"
+      hx-target="#wizard-body"
+      hx-swap="innerHTML"
+      hx-include="#connection-form"
+    >
+      ← Back
+    </button>
+
+    <!-- Test first, then Next becomes enabled -->
+    <button
+      class="btn btn-secondary"
+      id="test-btn"
+      hx-post="/setup/test-plex"
+      hx-target="#connection-result"
+      hx-swap="innerHTML"
+      hx-include="#connection-form"
+      hx-on::after-request="htmx.find('#next-btn').disabled = !htmx.find('#connection-result').classList.contains('ok')"
+    >
+      Test Connection
+    </button>
+
+    <button
+      class="btn btn-primary"
+      id="next-btn"
+      disabled
+      hx-post="/setup/libraries"
+      hx-target="#library-select-wrap"
+      hx-swap="innerHTML"
+      hx-include="#connection-form"
+      hx-on::after-request="
+        htmx.ajax('GET', '/setup/step/3', {target:'#wizard-body', swap:'innerHTML', values: {
+          plex_url: htmx.find('#plex_url').value,
+          plex_token: htmx.find('#plex_token').value
+        }});
+        sessionStorage.setItem('plex_url', htmx.find('#plex_url').value);
+        sessionStorage.setItem('plex_token', htmx.find('#plex_token').value);
+      "
+    >
+      Next →
+    </button>
+  </div>
+
+  <!-- Hidden target for library fetch (pre-loads before step 3 renders) -->
+  <div id="library-select-wrap" style="display:none;"></div>
+</div>
+
+<script>
+  // Enable Next button if connection was already tested (e.g. re-run wizard)
+  document.addEventListener('DOMContentLoaded', () => {
+    const result = document.getElementById('connection-result');
+    const nextBtn = document.getElementById('next-btn');
+    if (result && result.classList.contains('ok')) nextBtn.disabled = false;
+  });
+</script>

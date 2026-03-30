@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Setup — Plexamp LRC++{% endblock %}
+
+{% block full_page %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Setup — Plexamp LRC++</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="/static/htmx.min.js"></script>
+  <style>
+    body { background: var(--bg); }
+  </style>
+</head>
+<body>
+<div class="wizard-container">
+
+  <!-- Brand -->
+  <div style="text-align:center; margin-bottom: 2rem;">
+    <span style="font-size: 1.8rem; font-weight: 800; color: var(--accent); letter-spacing: -0.02em;">LRC<span style="color: var(--text-muted); font-weight: 400;">++</span></span>
+    <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">Plexamp Lyrics Manager</div>
+  </div>
+
+  <!-- Step indicators -->
+  <div class="wizard-steps" id="step-indicators">
+    {% for i, label in [(1,'Welcome'),(2,'Connection'),(3,'Library'),(4,'Mode'),(5,'Confirm')] %}
+    <div class="wizard-step {% if loop.index == current_step %}active{% elif loop.index < current_step %}done{% endif %}" id="step-dot-{{ loop.index }}">
+      <div class="step-dot">
+        {% if loop.index < current_step %}✓{% else %}{{ loop.index }}{% endif %}
+      </div>
+      <span style="display:none; font-size:0.78rem;">{{ label }}</span>
+    </div>
+    {% if not loop.last %}<div class="step-connector" id="connector-{{ loop.index }}"></div>{% endif %}
+    {% endfor %}
+  </div>
+
+  <!-- Wizard body — swapped by HTMX -->
+  <div id="wizard-body">
+    {% include "wizard_fragments/step_welcome.html" %}
+  </div>
+
+</div>
+</body>
+</html>
+{% endblock %}

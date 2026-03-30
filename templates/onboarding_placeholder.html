@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Onboarding — Plexamp LRC++{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Onboarding</h1>
+  <p>Setup complete. Lyrics fetching coming in the next slice.</p>
+</div>
+
+<div class="alert alert-success">
+  Configuration saved successfully. Plex URL: <code>{{ plex_url }}</code>
+</div>
+
+<div class="card">
+  <div class="card-title">What's next</div>
+  <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.8;">
+    The library scanner and lyrics fetcher are coming in Slice 2. Once wired up, this page
+    will show your albums grouped for review. For now, setup is verified as working.
+  </p>
+  <div style="margin-top: 1rem;">
+    <a href="/setup/rerun" class="btn btn-ghost">← Re-run Setup Wizard</a>
+  </div>
+</div>
+{% endblock %}

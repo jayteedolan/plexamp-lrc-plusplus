@@ -1,0 +1,44 @@
+<div class="wizard-body">
+  <div class="wizard-title">Welcome to Plexamp LRC++</div>
+  <div class="wizard-desc">
+    This tool automatically finds and manages synced lyric files (<code>.lrc</code>) for your
+    Plex music library, so Plexamp shows real-time lyrics for your songs.
+  </div>
+
+  <div class="card" style="margin-bottom: 0;">
+    <div style="display:flex; flex-direction:column; gap: 0.75rem;">
+      <div style="display:flex; align-items:flex-start; gap: 0.75rem;">
+        <span style="color: var(--accent); font-size: 1.1rem; margin-top: 0.1rem;">⬡</span>
+        <div>
+          <div style="font-weight: 600; font-size: 0.9rem;">Scans your Plex library</div>
+          <div style="color: var(--text-muted); font-size: 0.82rem;">Discovers all tracks and checks which already have lyrics.</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:flex-start; gap: 0.75rem;">
+        <span style="color: var(--accent); font-size: 1.1rem; margin-top: 0.1rem;">♫</span>
+        <div>
+          <div style="font-weight: 600; font-size: 0.9rem;">Fetches synced lyrics</div>
+          <div style="color: var(--text-muted); font-size: 0.82rem;">Searches LRCLIB, syncedlyrics, and Genius for the best match.</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:flex-start; gap: 0.75rem;">
+        <span style="color: var(--accent); font-size: 1.1rem; margin-top: 0.1rem;">✓</span>
+        <div>
+          <div style="font-weight: 600; font-size: 0.9rem;">You approve, Plex updates</div>
+          <div style="color: var(--text-muted); font-size: 0.82rem;">Review lyrics album by album, then they're written alongside your audio files.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wizard-actions">
+    <button
+      class="btn btn-primary"
+      hx-get="/setup/step/connection"
+      hx-target="#wizard-body"
+      hx-swap="innerHTML"
+    >
+      Get Started →
+    </button>
+  </div>
+</div>

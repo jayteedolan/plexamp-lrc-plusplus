@@ -1,0 +1,10 @@
+services:
+  plexamp-lrc:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8000}:8000"
+    env_file: .env
+    volumes:
+      - ./data:/app/data          # SQLite persistence
+      - ${MUSIC_DIR}:${MUSIC_DIR} # Music library at the same absolute path Plex uses

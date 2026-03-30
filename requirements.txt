@@ -1,0 +1,13 @@
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+jinja2==3.1.4
+python-multipart==0.0.12
+sqlalchemy==2.0.36
+pydantic-settings==2.6.1
+python-dotenv==1.0.1
+plexapi==4.15.16
+requests==2.32.3
+apscheduler==3.10.4
+syncedlyrics==1.0.1
+lyricsgenius==3.0.1
+starlette==0.41.3

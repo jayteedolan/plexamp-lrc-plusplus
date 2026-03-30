@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Plexamp LRC++{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="/static/htmx.min.js"></script>
+</head>
+<body>
+{% block full_page %}
+<div class="layout">
+  <!-- Sidebar nav (hidden on wizard pages via full_page override) -->
+  <nav class="sidebar">
+    <div class="sidebar-brand">LRC<span>++</span></div>
+
+    {% if mode %}
+    <div class="mode-badge {{ mode }}">
+      {% if mode == 'normal' %}Normal
+      {% elif mode == 'debug' %}Debug
+      {% elif mode == 'dangerous' %}⚠ Dangerous
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="sidebar-nav">
+      <a href="/" class="nav-item {% if active == 'dashboard' %}active{% endif %}">
+        <span>◈</span> Dashboard
+      </a>
+      <a href="/onboarding" class="nav-item {% if active == 'onboarding' %}active{% endif %}">
+        <span>⬡</span> Onboarding
+      </a>
+      <a href="/library" class="nav-item {% if active == 'library' %}active{% endif %}">
+        <span>♫</span> Library
+      </a>
+      <a href="/logs" class="nav-item {% if active == 'logs' %}active{% endif %}">
+        <span>≡</span> Logs
+      </a>
+      <a href="/settings" class="nav-item {% if active == 'settings' %}active{% endif %}">
+        <span>⚙</span> Settings
+      </a>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+</div>
+{% endblock %}
+</body>
+</html>

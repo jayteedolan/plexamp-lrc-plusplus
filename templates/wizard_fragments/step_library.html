@@ -1,0 +1,74 @@
+<div class="wizard-body">
+  <div class="wizard-title">Library Selection</div>
+  <div class="wizard-desc">Choose your Plex music library and set the path where music files live on disk.</div>
+
+  <form id="library-form">
+    <!-- Pass connection params forward (hidden) -->
+    <input type="hidden" name="plex_url" id="plex_url_h" />
+    <input type="hidden" name="plex_token" id="plex_token_h" />
+
+    <div class="form-group">
+      <label class="form-label" for="library-select">Plex Music Library</label>
+      <div id="library-select-wrap">
+        <!-- Pre-populated by HTMX on step 2's Next button, or fallback -->
+        <select id="library-select" name="plex_library_name" class="form-control">
+          <option value="{{ existing.plex_library_name if existing else 'Music' }}">
+            {{ existing.plex_library_name if existing else 'Music' }}
+          </option>
+        </select>
+      </div>
+      <div class="form-hint">Select the library section that contains your music.</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="music_dir">Music Directory Path</label>
+      <input
+        class="form-control"
+        id="music_dir"
+        name="music_dir"
+        type="text"
+        placeholder="/mnt/media/Music"
+        value="{{ existing.music_dir if existing else '' }}"
+        required
+      />
+      <div class="form-hint">
+        The absolute path where Plex finds your music files. This must exactly match
+        what Plex reports — even a trailing slash difference will break writes.
+        <br /><br />
+        <strong>Example:</strong> if Plex shows a track path as
+        <code>/mnt/media/Music/Artist/Album/01.mp3</code>, enter
+        <code>/mnt/media/Music</code>.
+      </div>
+    </div>
+  </form>
+
+  <div class="wizard-actions">
+    <button
+      class="btn btn-ghost"
+      hx-get="/setup/step/connection"
+      hx-target="#wizard-body"
+      hx-swap="innerHTML"
+    >
+      ← Back
+    </button>
+    <button
+      class="btn btn-primary"
+      hx-get="/setup/step/4"
+      hx-target="#wizard-body"
+      hx-swap="innerHTML"
+      hx-include="#library-form"
+    >
+      Next →
+    </button>
+  </div>
+</div>
+
+<script>
+  // Restore connection values from sessionStorage
+  document.addEventListener('htmx:load', () => {
+    const urlEl = document.getElementById('plex_url_h');
+    const tokEl = document.getElementById('plex_token_h');
+    if (urlEl) urlEl.value = sessionStorage.getItem('plex_url') || '';
+    if (tokEl) tokEl.value = sessionStorage.getItem('plex_token') || '';
+  });
+</script>

@@ -1,0 +1,116 @@
+<div class="wizard-body">
+  <div class="wizard-title">Operating Mode</div>
+  <div class="wizard-desc">Choose how this tool fetches and approves lyrics. You can change this later in Settings.</div>
+
+  <form id="mode-form">
+    <!-- Pass forward from previous steps -->
+    <input type="hidden" name="plex_url" id="plex_url_h" />
+    <input type="hidden" name="plex_token" id="plex_token_h" />
+    <input type="hidden" name="plex_library_name" id="library_h" />
+    <input type="hidden" name="music_dir" id="music_dir_h" />
+
+    <div class="mode-cards">
+
+      <!-- Normal -->
+      <label class="mode-card {% if not existing or existing.operating_mode == 'normal' %}selected{% endif %}" id="card-normal" onclick="selectMode('normal')">
+        <input type="radio" name="operating_mode" value="normal"
+          {% if not existing or existing.operating_mode == 'normal' %}checked{% endif %} />
+        <div class="mode-card-header">
+          <span style="color: var(--info);">●</span> Normal <span style="font-weight: 400; color: var(--text-muted); font-size: 0.8rem;">(Recommended)</span>
+        </div>
+        <div class="mode-card-desc">
+          High-confidence matches are auto-approved. Medium-confidence goes to your review queue. Low-confidence is flagged for attention.
+        </div>
+      </label>
+
+      <!-- Debug -->
+      <label class="mode-card {% if existing and existing.operating_mode == 'debug' %}selected{% endif %}" id="card-debug" onclick="selectMode('debug')">
+        <input type="radio" name="operating_mode" value="debug"
+          {% if existing and existing.operating_mode == 'debug' %}checked{% endif %} />
+        <div class="mode-card-header">
+          <span style="color: var(--success);">●</span> Debug
+        </div>
+        <div class="mode-card-desc">
+          Shows everything: raw API responses from each lyrics source, confidence score breakdown, and the decision logic for every track. All tracks go to your review queue — nothing is auto-approved.
+        </div>
+      </label>
+
+      <!-- Dangerously Accept -->
+      <label class="mode-card danger-card {% if existing and existing.operating_mode == 'dangerous' %}selected{% endif %}" id="card-dangerous" onclick="selectMode('dangerous')">
+        <input type="radio" name="operating_mode" value="dangerous"
+          {% if existing and existing.operating_mode == 'dangerous' %}checked{% endif %} />
+        <div class="mode-card-header">
+          <span>⚠</span> Dangerously Accept
+        </div>
+        <div class="mode-card-desc">
+          Bulk auto-approves everything at or above your chosen confidence threshold. A rollback report is provided after each run so you can undo.
+          <br /><br />
+          <span style="color: var(--danger); font-weight: 600;">Not recommended.</span>
+          Wrong or mis-timed lyrics will be written to disk without review.
+        </div>
+
+        <!-- Threshold sub-option, shown only when dangerous is selected -->
+        <div class="threshold-options" id="threshold-options" style="{% if not existing or existing.operating_mode != 'dangerous' %}display: none;{% endif %}">
+          <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.35rem; font-weight: 500;">Auto-approve threshold:</div>
+          <label>
+            <input type="radio" name="dangerous_threshold" value="high"
+              {% if not existing or existing.dangerous_threshold == 'high' %}checked{% endif %} />
+            High confidence only
+          </label>
+          <label>
+            <input type="radio" name="dangerous_threshold" value="medium"
+              {% if existing and existing.dangerous_threshold == 'medium' %}checked{% endif %} />
+            Medium or higher
+          </label>
+          <label>
+            <input type="radio" name="dangerous_threshold" value="low"
+              {% if existing and existing.dangerous_threshold == 'low' %}checked{% endif %} />
+            Everything (any confidence)
+          </label>
+        </div>
+      </label>
+
+    </div>
+  </form>
+
+  <div class="wizard-actions">
+    <button
+      class="btn btn-ghost"
+      hx-get="/setup/step/3"
+      hx-target="#wizard-body"
+      hx-swap="innerHTML"
+    >
+      ← Back
+    </button>
+    <button
+      class="btn btn-primary"
+      hx-get="/setup/step/5"
+      hx-target="#wizard-body"
+      hx-swap="innerHTML"
+      hx-include="#mode-form"
+    >
+      Next →
+    </button>
+  </div>
+</div>
+
+<script>
+  function selectMode(mode) {
+    document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('card-' + mode).classList.add('selected');
+    document.getElementById('card-' + mode).querySelector('input[type=radio]').checked = true;
+    const thresholdOpts = document.getElementById('threshold-options');
+    if (thresholdOpts) thresholdOpts.style.display = mode === 'dangerous' ? 'flex' : 'none';
+  }
+
+  document.addEventListener('htmx:load', () => {
+    const urlEl = document.getElementById('plex_url_h');
+    const tokEl = document.getElementById('plex_token_h');
+    const libEl = document.getElementById('library_h');
+    const dirEl = document.getElementById('music_dir_h');
+    if (urlEl) urlEl.value = sessionStorage.getItem('plex_url') || '';
+    if (tokEl) tokEl.value = sessionStorage.getItem('plex_token') || '';
+    if (libEl) libEl.value = sessionStorage.getItem('plex_library') || 'Music';
+    if (dirEl) dirEl.value = sessionStorage.getItem('music_dir') || '';
+  });
+</script>
